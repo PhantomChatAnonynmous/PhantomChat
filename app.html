@@ -3,39 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phantom</title>
+    <title>Phantom Chat</title>
     <style>
         :root {
-            --bg: #0d1117;
-            --surface: #161b22;
-            --text: #c9d1d9;
-            --text-muted: #8b949e;
-            --border: #30363d;
-            --accent: #238636;
-            --accent-hover: #2ea043;
-            --message-you: #238636;
-            --message-other: #21262d;
+            --bg: #0a0e14;
+            --surface: #11151c;
+            --surface-hover: #1a2230;
+            --text: #d1d9e0;
+            --text-muted: #88929f;
+            --border: #1e2938;
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --message-you: #3b82f6;
+            --message-other: #1e2938;
+            --shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
-        body {
+
+        * {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
             height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
-        .top-bar {
-            background: #010409;
-            padding: 10px 16px;
+
+        header {
+            background: #000;
+            padding: 12px 20px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
         }
-        .logo { font-weight: 600; font-size: 1.1rem; }
-        .status { font-size: 0.82rem; color: var(--text-muted); }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .logo {
+            width: 140px;
+            height: auto;
+            filter: drop-shadow(0 2px 8px rgba(59,130,246,0.4));
+        }
+
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .slogan {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: center;
+            max-width: 420px;
+            opacity: 0.85;
+        }
 
         .content {
             flex: 1;
@@ -43,58 +79,69 @@
             overflow: hidden;
         }
 
-        .sidebar {
-            width: 280px;
+        aside.sidebar {
+            width: 260px;
             background: var(--surface);
             border-right: 1px solid var(--border);
             overflow-y: auto;
         }
+
         .sidebar-header {
-            padding: 16px;
-            font-size: 1.1rem;
+            padding: 16px 20px;
+            font-size: 1.05rem;
             font-weight: 500;
             border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
         }
+
         .contact {
-            padding: 12px 16px;
+            padding: 12px 20px;
             cursor: pointer;
-            transition: 0.12s;
+            transition: all 0.18s ease;
         }
+
         .contact:hover, .contact.active {
-            background: #1f6feb22;
+            background: var(--surface-hover);
         }
+
         .contact-name {
             font-weight: 500;
+            font-size: 0.97rem;
         }
-        .contact:last-child { border-bottom: none; }
 
-        .chat-area {
+        main.chat-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: var(--bg);
         }
+
         .messages {
             flex: 1;
-            padding: 16px;
+            padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
         }
+
         .message {
-            max-width: 78%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            line-height: 1.4;
+            max-width: 76%;
+            padding: 11px 15px;
+            border-radius: 14px;
+            line-height: 1.42;
+            font-size: 0.97rem;
             word-wrap: break-word;
+            box-shadow: var(--shadow);
         }
+
         .message.you {
             background: var(--message-you);
             color: white;
             align-self: flex-end;
             border-bottom-right-radius: 4px;
         }
+
         .message.other {
             background: var(--message-other);
             align-self: flex-start;
@@ -102,56 +149,70 @@
         }
 
         .input-area {
-            padding: 12px 16px;
+            padding: 14px 20px;
             background: var(--surface);
             border-top: 1px solid var(--border);
             display: flex;
-            gap: 8px;
+            gap: 12px;
+            flex-shrink: 0;
         }
+
         #message-input {
             flex: 1;
-            padding: 12px 16px;
+            padding: 14px 18px;
             border: 1px solid var(--border);
-            border-radius: 8px;
-            background: #0d1117;
+            border-radius: 10px;
+            background: #0f1622;
             color: var(--text);
             font-size: 1rem;
             outline: none;
+            transition: all 0.2s;
         }
+
         #message-input:focus {
-            border-color: #1f6feb;
-            box-shadow: 0 0 0 3px #1f6feb33;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
         }
+
         #send-button {
-            padding: 0 20px;
+            padding: 0 24px;
             background: var(--accent);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: 500;
             cursor: pointer;
-            transition: 0.15s;
+            transition: all 0.2s;
         }
-        #send-button:hover { background: var(--accent-hover); }
 
-        .bottom-bar {
-            padding: 10px;
-            background: #010409;
+        #send-button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        footer.bottom-bar {
+            padding: 10px 20px;
+            background: #000;
             display: flex;
             justify-content: center;
-            gap: 24px;
-            font-size: 0.9rem;
+            gap: 32px;
+            font-size: 0.85rem;
             color: var(--text-muted);
             border-top: 1px solid var(--border);
             flex-shrink: 0;
         }
-        .bottom-bar button {
+
+        footer button {
             background: none;
             border: none;
             color: inherit;
             cursor: pointer;
+            transition: color 0.2s;
         }
-        .bottom-bar button:hover { color: var(--text); }
+
+        footer button:hover {
+            color: var(--text);
+        }
 
         .empty-state {
             flex: 1;
@@ -160,105 +221,110 @@
             justify-content: center;
             color: var(--text-muted);
             font-size: 1.1rem;
+            text-align: center;
         }
 
         @media (max-width: 768px) {
             .content { flex-direction: column; }
-            .sidebar { width: 100%; height: 40%; border-right: none; border-bottom: 1px solid var(--border); }
-            .chat-area { height: 60%; }
+            aside.sidebar { width: 100%; height: 38%; border-right: none; border-bottom: 1px solid var(--border); }
+            main.chat-area { height: 62%; }
+            .logo { width: 110px; }
         }
     </style>
 </head>
 <body>
 
-<div class="top-bar">
-    <div class="logo">Phantom</div>
-    <div class="status">Node Status: Online</div>
-</div>
+<header>
+    <div class="logo-container">
+        <img src="PhantomLogo.jpg" alt="Phantom Chat Logo" class="logo">
+    </div>
+    <div class="app-title">Phantom Chat</div>
+    <div class="slogan">The most private, secure and first messaging app in its type.</div>
+</header>
 
 <div class="content">
-    <div class="sidebar">
+    <aside class="sidebar">
         <div class="sidebar-header">Επαφές / Nodes</div>
         <div id="contacts-list"></div>
-    </div>
+    </aside>
 
-    <div class="chat-area">
+    <main class="chat-area">
         <div class="messages" id="chat-messages">
-            <div class="empty-state">Επίλεξε μια επαφή για να ξεκινήσεις</div>
+            <div class="empty-state">Επίλεξε μια επαφή για να ξεκινήσεις συνομιλία</div>
         </div>
 
         <div class="input-area">
             <input type="text" id="message-input" placeholder="Γράψε μήνυμα..." autocomplete="off">
             <button id="send-button">Αποστολή</button>
         </div>
-    </div>
+    </main>
 </div>
 
-<div class="bottom-bar">
+<footer class="bottom-bar">
     <button>Σύνδεση Node</button>
     <button>Light Mode</button>
     <button onclick="window.location.href='index.html'">Αποσύνδεση</button>
     <button>Ρυθμίσεις</button>
-</div>
+</footer>
 
 <script>
-    const contactsList = document.getElementById('contacts-list');
-    const chatMessages = document.getElementById('chat-messages');
+    const contactsListEl = document.getElementById('contacts-list');
+    const chatMessagesEl = document.getElementById('chat-messages');
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
 
     let currentContact = null;
 
-    // Demo contacts (fallback αν δεν φορτώσει JSON)
+    // Demo contacts (fallback)
     const demoContacts = [
         { id: "test1", name: "Εσύ: test" },
         { id: "friend1", name: "Φίλος 1" },
         { id: "groupA", name: "Ομάδα Α" }
     ];
 
-    // Προσπάθεια φόρτωσης JSON – fallback σε demo
+    // Φόρτωση contacts
     fetch('./contacts.json')
         .then(r => r.json())
         .then(contacts => renderContacts(contacts))
         .catch(() => {
-            console.warn("Δεν βρέθηκε contacts.json → χρησιμοποιώ demo");
+            console.warn("contacts.json not found → using demo");
             renderContacts(demoContacts);
         });
 
     function renderContacts(contacts) {
-        contactsList.innerHTML = '';
+        contactsListEl.innerHTML = '';
         if (contacts.length === 0) {
-            contactsList.innerHTML = '<div style="padding:16px;color:#8b949e;">Δεν υπάρχουν επαφές ακόμα</div>';
+            contactsListEl.innerHTML = '<div style="padding:16px;color:var(--text-muted);">Δεν υπάρχουν επαφές ακόμα</div>';
             return;
         }
         contacts.forEach(c => {
             const div = document.createElement('div');
             div.className = 'contact';
             div.innerHTML = `<div class="contact-name">${c.name}</div>`;
-            div.onclick = () => openChat(c);
-            contactsList.appendChild(div);
+            div.onclick = () => openChat(c, div);
+            contactsListEl.appendChild(div);
         });
     }
 
-    function openChat(contact) {
+    function openChat(contact, element) {
         currentContact = contact;
         document.querySelectorAll('.contact').forEach(el => el.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        element.classList.add('active');
 
-        chatMessages.innerHTML = '<div class="empty-state">Φόρτωση...</div>';
+        chatMessagesEl.innerHTML = '<div class="empty-state">Φόρτωση συνομιλίας...</div>';
 
         fetch(`./messages-${contact.id}.json`)
             .then(r => r.json())
             .then(msgs => {
-                chatMessages.innerHTML = '';
+                chatMessagesEl.innerHTML = '';
                 if (msgs.length === 0) {
-                    chatMessages.innerHTML = '<div class="empty-state">Κανένα μήνυμα ακόμα</div>';
+                    chatMessagesEl.innerHTML = '<div class="empty-state">Κανένα μήνυμα ακόμα</div>';
                 } else {
                     msgs.forEach(m => addMessage(m.sender, atob(m.content)));
                 }
             })
             .catch(() => {
-                chatMessages.innerHTML = '<div class="empty-state">Δεν φορτώθηκαν μηνύματα</div>';
+                chatMessagesEl.innerHTML = '<div class="empty-state">Δεν φορτώθηκαν μηνύματα</div>';
             });
     }
 
@@ -266,8 +332,8 @@
         const div = document.createElement('div');
         div.className = `message ${sender === 'you' ? 'you' : 'other'}`;
         div.textContent = text;
-        chatMessages.appendChild(div);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        chatMessagesEl.appendChild(div);
+        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
     }
 
     sendButton.onclick = () => {
@@ -277,12 +343,15 @@
         addMessage('you', text);
         messageInput.value = '';
 
-        // Demo αποθήκευση (στην πραγματικότητα θα γίνει από server)
+        // Demo log – αργότερα θα στέλνει στο backend
         console.log(`Αποστολή προς ${currentContact.name}: ${text}`);
     };
 
     messageInput.addEventListener('keypress', e => {
-        if (e.key === 'Enter') sendButton.click();
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendButton.click();
+        }
     });
 </script>
 </body>
