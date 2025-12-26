@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom - Register/Login</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f0f0f0;
+            --container-bg: white;
+            --text-color: black;
+            --input-bg: white;
+            --input-border: #ccc;
+            --button-bg: #333;
+            --button-text: white;
+            --button-hover: #555;
+            --error-color: #c00;
+            --success-color: #006600;
+            --link-color: #007bff;
+        }
+        body.dark-mode {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --input-bg: #2a2a2a;
+            --input-border: #444;
+            --button-bg: #444;
+            --button-text: #e0e0e0;
+            --button-hover: #666;
+            --error-color: #ff4d4d;
+            --success-color: #00cc00;
+            --link-color: #4da6ff;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .header {
+            position: absolute;
+            top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        .container {
+            background: var(--container-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            width: 340px;
+            transition: background 0.3s;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: background 0.3s, border 0.3s, color 0.3s;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: var(--button-hover);
+        }
+        .copy-btn {
+            padding: 5px 10px;
+            margin-left: 5px;
+            font-size: 0.8em;
+            background: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .copy-btn:hover {
+            background: var(--button-hover);
+        }
+        .switch {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        .switch a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+        .switch a:hover {
+            text-decoration: underline;
+        }
+        #credentials {
+            color: var(--success-color);
+            margin-top: 15px;
+            word-wrap: break-word;
+            font-size: 0.95em;
+        }
+        #error, #error-login, #error-forgot {
+            color: var(--error-color);
+            text-align: center;
+            min-height: 20px;
+            margin: 8px 0;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 12px;
+            background: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #theme-toggle:hover {
+            background: var(--button-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">PhantomChat</div>
+    <button id="theme-toggle" onclick="toggleTheme()">Dark Mode</button>
+
+    <!-- Register Form -->
+    <div class="container" id="register-form">
+        <h2>Δημιουργία Λογαριασμού</h2>
+        <input type="password" id="reg-password" placeholder="Κωδικός (τουλάχιστον 12 χαρακτήρες)">
+        <button onclick="registerUser()">Δημιουργία</button>
+        <div class="switch">Έχεις λογαριασμό; <a href="#" onclick="showLogin()">Σύνδεση</a></div>
+        <p id="credentials"></p>
+        <p id="error"></p>
+    </div>
+
+    <!-- Login Form -->
+    <div class="container" id="login-form" style="display: none;">
+        <h2>Σύνδεση</h2>
+        <input type="text" id="login-username" placeholder="Username">
+        <input type="password" id="login-password" placeholder="Κωδικός">
+        <button onclick="loginUser()">Σύνδεση</button>
+        <div class="switch">
+            <a href="#" onclick="showRegister()">Δημιουργία</a> | 
+            <a href="#" onclick="showForgot()">Ξέχασα κωδικό</a>
+        </div>
+        <p id="error-login"></p>
+    </div>
+
+    <!-- Forgot Password Form -->
+    <div class="container" id="forgot-form" style="display: none;">
+        <h2>Ανάκτηση Κωδικού</h2>
+        <input type="text" id="forgot-username" placeholder="Username">
+        <input type="text" id="forgot-privatekey" placeholder="Private Key (32 χαρακτήρες)">
+        <input type="password" id="forgot-newpassword" placeholder="Νέος κωδικός (≥12 χαρακτήρες)">
+        <button onclick="resetPassword()">Επαναφορά</button>
+        <div class="switch"><a href="#" onclick="showLogin()">Πίσω</a></div>
+        <p id="error-forgot"></p>
+    </div>
+
+    <script>
+        // Dark Mode Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+
+        // Load saved theme
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // Βοηθητική συνάρτηση για τυχαίους χαρακτήρες
+        function generateRandomString(length, chars) {
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function registerUser() {
+            const password = document.getElementById('reg-password').value.trim();
+            const error = document.getElementById('error');
+            const creds = document.getElementById('credentials');
+
+            error.innerText = '';
+            creds.innerHTML = '';
+
+            if (password.length < 12) {
+                error.innerText = 'Ο κωδικός πρέπει να έχει τουλάχιστον 12 χαρακτήρες.';
+                return;
+            }
+
+            if (password.length === 0) {
+                error.innerText = 'Παρακαλώ εισάγετε κωδικό.';
+                return;
+            }
+
+            const allowedChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?/';
+            const escapedChars = allowedChars.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+            const regex = new RegExp(`^[${escapedChars}]{12,}$`);
+            if (!regex.test(password)) {
+                error.innerText = 'Ο κωδικός περιέχει μη επιτρεπόμενους χαρακτήρες. Επιτρεπόμενοι: γράμματα, αριθμοί, !@#$%^&*()_+-=[]{}|;:,.<>?/';
+                return;
+            }
+
+            const usernameChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$';
+            const username = generateRandomString(8, usernameChars);
+            const privateKey = generateRandomString(32, allowedChars);
+
+            const hashedPassword = CryptoJS.SHA256(password).toString();
+            const encryptedPrivateKey = CryptoJS.AES.encrypt(privateKey, password).toString();
+
+            localStorage.setItem('phantom_username', username);
+            localStorage.setItem('phantom_hashed_password', hashedPassword);
+            localStorage.setItem('phantom_encrypted_privatekey', encryptedPrivateKey);
+            localStorage.setItem('phantom_hashed_privatekey', CryptoJS.SHA256(privateKey).toString());
+
+            creds.innerHTML = `
+                <strong>Αποθήκευσε αυτά!</strong><br><br>
+                Username: <strong>${username}</strong> <button class="copy-btn" onclick="copyToClipboard('${username}')">Copy</button><br>
+                Private Key: <strong>${privateKey}</strong> <button class="copy-btn" onclick="copyToClipboard('${privateKey}')">Copy</button><br><br>
+                <small>(Αν χαθούν, ο λογαριασμός δεν ανακτάται!)</small>
+            `;
+
+            setTimeout(() => {
+                showLogin();
+            }, 6000);
+        }
+
+        function loginUser() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const error = document.getElementById('error-login');
+
+            error.innerText = '';
+
+            if (username.length === 0 || password.length === 0) {
+                error.innerText = 'Παρακαλώ συμπληρώστε όλα τα πεδία.';
+                return;
+            }
+
+            const storedUsername = localStorage.getItem('phantom_username');
+            const storedHash = localStorage.getItem('phantom_hashed_password');
+
+            if (!storedUsername || username !== storedUsername) {
+                error.innerText = 'Λάθος username.';
+                return;
+            }
+
+            const hashedPassword = CryptoJS.SHA256(password).toString();
+            if (hashedPassword !== storedHash) {
+                error.innerText = 'Λάθος κωδικός.';
+                return;
+            }
+
+            window.location.href = 'app.html';
+        }
+
+        function resetPassword() {
+            const username = document.getElementById('forgot-username').value.trim();
+            const privateKey = document.getElementById('forgot-privatekey').value.trim();
+            const newPassword = document.getElementById('forgot-newpassword').value.trim();
+            const error = document.getElementById('error-forgot');
+
+            error.innerText = '';
+
+            if (username.length === 0 || privateKey.length === 0 || newPassword.length === 0) {
+                error.innerText = 'Παρακαλώ συμπληρώστε όλα τα πεδία.';
+                return;
+            }
+
+            if (newPassword.length < 12) {
+                error.innerText = 'Ο νέος κωδικός πρέπει να έχει ≥12 χαρακτήρες.';
+                return;
+            }
+
+            const storedUsername = localStorage.getItem('phantom_username');
+            const storedHashedKey = localStorage.getItem('phantom_hashed_privatekey');
+
+            if (!storedUsername || username !== storedUsername) {
+                error.innerText = 'Λάθος username.';
+                return;
+            }
+
+            const hashedProvidedKey = CryptoJS.SHA256(privateKey).toString();
+            if (hashedProvidedKey !== storedHashedKey) {
+                error.innerText = 'Λάθος Private Key.';
+                return;
+            }
+
+            const newHashedPassword = CryptoJS.SHA256(newPassword).toString();
+            const newEncryptedPrivateKey = CryptoJS.AES.encrypt(privateKey, newPassword).toString();
+
+            localStorage.setItem('phantom_hashed_password', newHashedPassword);
+            localStorage.setItem('phantom_encrypted_privatekey', newEncryptedPrivateKey);
+
+            error.innerText = 'Επιτυχής επαναφορά! Συνδεθείτε.';
+            setTimeout(() => {
+                showLogin();
+            }, 2500);
+        }
+
+        function showLogin() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('forgot-form').style.display = 'none';
+        }
+
+        function showRegister() {
+            document.getElementById('register-form').style.display = 'block';
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('forgot-form').style.display = 'none';
+        }
+
+        function showForgot() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('forgot-form').style.display = 'block';
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Αντιγράφηκε!');
+            }).catch(err => {
+                console.error('Σφάλμα αντιγραφής:', err);
+            });
+        }
+    </script>
+</body>
+</html>

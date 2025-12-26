@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --text: #c9d1d9;
+            --text-muted: #8b949e;
+            --border: #30363d;
+            --accent: #238636;
+            --accent-hover: #2ea043;
+            --message-you: #238636;
+            --message-other: #21262d;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-bar {
+            background: #010409;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .logo { font-weight: 600; font-size: 1.1rem; }
+        .status { font-size: 0.82rem; color: var(--text-muted); }
+
+        .content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border);
+        }
+        .contact {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: 0.12s;
+        }
+        .contact:hover, .contact.active {
+            background: #1f6feb22;
+        }
+        .contact-name {
+            font-weight: 500;
+        }
+        .contact:last-child { border-bottom: none; }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+        }
+        .messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            max-width: 78%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .message.you {
+            background: var(--message-you);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message.other {
+            background: var(--message-other);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .input-area {
+            padding: 12px 16px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+        }
+        #message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #0d1117;
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+        }
+        #message-input:focus {
+            border-color: #1f6feb;
+            box-shadow: 0 0 0 3px #1f6feb33;
+        }
+        #send-button {
+            padding: 0 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        #send-button:hover { background: var(--accent-hover); }
+
+        .bottom-bar {
+            padding: 10px;
+            background: #010409;
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .bottom-bar button {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+        }
+        .bottom-bar button:hover { color: var(--text); }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .content { flex-direction: column; }
+            .sidebar { width: 100%; height: 40%; border-right: none; border-bottom: 1px solid var(--border); }
+            .chat-area { height: 60%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo">Phantom</div>
+    <div class="status">Node Status: Online</div>
+</div>
+
+<div class="content">
+    <div class="sidebar">
+        <div class="sidebar-header">Επαφές / Nodes</div>
+        <div id="contacts-list"></div>
+    </div>
+
+    <div class="chat-area">
+        <div class="messages" id="chat-messages">
+            <div class="empty-state">Επίλεξε μια επαφή για να ξεκινήσεις</div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="message-input" placeholder="Γράψε μήνυμα..." autocomplete="off">
+            <button id="send-button">Αποστολή</button>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-bar">
+    <button>Σύνδεση Node</button>
+    <button>Light Mode</button>
+    <button onclick="window.location.href='index.html'">Αποσύνδεση</button>
+    <button>Ρυθμίσεις</button>
+</div>
+
+<script>
+    const contactsList = document.getElementById('contacts-list');
+    const chatMessages = document.getElementById('chat-messages');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+
+    let currentContact = null;
+
+    // Demo contacts (fallback αν δεν φορτώσει JSON)
+    const demoContacts = [
+        { id: "test1", name: "Εσύ: test" },
+        { id: "friend1", name: "Φίλος 1" },
+        { id: "groupA", name: "Ομάδα Α" }
+    ];
+
+    // Προσπάθεια φόρτωσης JSON – fallback σε demo
+    fetch('./contacts.json')
+        .then(r => r.json())
+        .then(contacts => renderContacts(contacts))
+        .catch(() => {
+            console.warn("Δεν βρέθηκε contacts.json → χρησιμοποιώ demo");
+            renderContacts(demoContacts);
+        });
+
+    function renderContacts(contacts) {
+        contactsList.innerHTML = '';
+        if (contacts.length === 0) {
+            contactsList.innerHTML = '<div style="padding:16px;color:#8b949e;">Δεν υπάρχουν επαφές ακόμα</div>';
+            return;
+        }
+        contacts.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'contact';
+            div.innerHTML = `<div class="contact-name">${c.name}</div>`;
+            div.onclick = () => openChat(c);
+            contactsList.appendChild(div);
+        });
+    }
+
+    function openChat(contact) {
+        currentContact = contact;
+        document.querySelectorAll('.contact').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        chatMessages.innerHTML = '<div class="empty-state">Φόρτωση...</div>';
+
+        fetch(`./messages-${contact.id}.json`)
+            .then(r => r.json())
+            .then(msgs => {
+                chatMessages.innerHTML = '';
+                if (msgs.length === 0) {
+                    chatMessages.innerHTML = '<div class="empty-state">Κανένα μήνυμα ακόμα</div>';
+                } else {
+                    msgs.forEach(m => addMessage(m.sender, atob(m.content)));
+                }
+            })
+            .catch(() => {
+                chatMessages.innerHTML = '<div class="empty-state">Δεν φορτώθηκαν μηνύματα</div>';
+            });
+    }
+
+    function addMessage(sender, text) {
+        const div = document.createElement('div');
+        div.className = `message ${sender === 'you' ? 'you' : 'other'}`;
+        div.textContent = text;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    sendButton.onclick = () => {
+        const text = messageInput.value.trim();
+        if (!text || !currentContact) return;
+
+        addMessage('you', text);
+        messageInput.value = '';
+
+        // Demo αποθήκευση (στην πραγματικότητα θα γίνει από server)
+        console.log(`Αποστολή προς ${currentContact.name}: ${text}`);
+    };
+
+    messageInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') sendButton.click();
+    });
+</script>
+</body>
+</html>
